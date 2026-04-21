@@ -3,16 +3,19 @@
 #include <sys/socket.h>
 #include <string>
 #include <sys/un.h>
-#include <format>
 #include <stdexcept>
 #include <unistd.h>
 
 #define CONN_ERROR_MSG "Space Calibrator driver unavailable. Make sure SteamVR is running, and the Space Calibrator addon is enabled in SteamVR settings."
-#define DRIVER_VERSION_ERROR_MSG \
-"Incorrect driver version installed, try reinstalling OpenVR-SpaceCalibrator. (Client: ({}), Driver: ({}))"
 
 IPCClient::~IPCClient() {
     if (client_fd >= 0) close(client_fd);
+}
+
+void IPCClient::Send(const protocol::Request &request) {
+    ssize_t written = write(client_fd, &request, sizeof request);
+    if (written != sizeof request)
+        throw std::runtime_error("Error writing IPC request");
 }
 
 protocol::Response IPCClient::SendBlocking(const protocol::Request &request) {
@@ -27,9 +30,10 @@ static void Handshake(IPCClient &client, int conn) {
     auto response = client.SendBlocking(payload);
 
     if (response.type != protocol::ResponseHandshake || response.protocol.version != protocol::Version) {
-        std::string errorMessage = std::format(DRIVER_VERSION_ERROR_MSG, std::to_string(protocol::Version),
-                                               std::to_string(response.protocol.version));
-        throw std::runtime_error(errorMessage);
+        throw std::runtime_error(
+            "Incorrect driver version installed, try reinstalling OpenVR-SpaceCalibrator. (Client: " +
+            std::to_string(protocol::Version) + ", Driver: " +
+            std::to_string(response.protocol.version) + ")");
     }
 }
 

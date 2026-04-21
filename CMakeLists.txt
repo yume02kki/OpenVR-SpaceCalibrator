@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
 project(OpenVR-SpaceCalibrator LANGUAGES C CXX)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 # Vendored includes
 include_directories(lib)
-include_directories(lib/Eigen)
+include_directories(SYSTEM lib/Eigen)
 include_directories(lib/openvr)
 include_directories(lib/gl3w/include)
 include_directories(lib/imgui)
@@ -30,6 +30,7 @@ add_executable(openvr-spacecalibrator
     lib/gl3w/src/gl3w.c
 )
 target_include_directories(openvr-spacecalibrator PRIVATE OpenVR-SpaceCalibrator)
+target_compile_options(openvr-spacecalibrator PRIVATE -Wno-template-body)
 target_link_libraries(openvr-spacecalibrator glfw OpenGL::GL openvr_api Threads::Threads dl)
 
 # Driver shared library
