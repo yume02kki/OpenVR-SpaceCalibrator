@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Logging.h"
-#include <MinHook.h>
+#include <funchook.h>
 #include <map>
 #include <string>
 
@@ -20,6 +20,8 @@ public:
 	static void Unregister(IHook *hook);
 	static void DestroyAll();
 
+	static funchook_t *funchook;
+
 private:
 	static std::map<std::string, IHook *> hooks;
 };
@@ -32,26 +34,23 @@ public:
 
 	bool CreateHookInObjectVTable(void *object, int vtableOffset, void *detourFunction)
 	{
-		// For virtual objects, VC++ adds a pointer to the vtable as the first member.
-		// To access the vtable, we simply dereference the object.
 		void **vtable = *((void ***)object);
+		originalFunc = (FuncType)vtable[vtableOffset];
 
-		// The vtable itself is an array of pointers to member functions,
-		// in the order they were declared in.
-		targetFunc = vtable[vtableOffset];
+		if (!funchook)
+			funchook = funchook_create();
 
-		auto err = MH_CreateHook(targetFunc, detourFunction, (LPVOID *)&originalFunc);
-		if (err != MH_OK)
+		int rv = funchook_prepare(funchook, (void **)&originalFunc, detourFunction);
+		if (rv != 0)
 		{
-			LOG("Failed to create hook for %s, error: %s", name.c_str(), MH_StatusToString(err));
+			LOG("Failed to prepare hook for %s, error: %d", name.c_str(), rv);
 			return false;
 		}
 
-		err = MH_EnableHook(targetFunc);
-		if (err != MH_OK)
+		rv = funchook_install(funchook, 0);
+		if (rv != 0)
 		{
-			LOG("Failed to enable hook for %s, error: %s", name.c_str(), MH_StatusToString(err));
-			MH_RemoveHook(targetFunc);
+			LOG("Failed to install hook for %s, error: %d", name.c_str(), rv);
 			return false;
 		}
 
@@ -62,14 +61,13 @@ public:
 
 	void Destroy()
 	{
-		if (enabled)
+		if (enabled && funchook)
 		{
-			MH_RemoveHook(targetFunc);
+			funchook_uninstall(funchook, 0);
 			enabled = false;
 		}
 	}
 
 private:
 	bool enabled = false;
-	void* targetFunc = nullptr;
 };

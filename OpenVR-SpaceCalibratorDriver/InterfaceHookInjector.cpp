@@ -44,7 +44,7 @@ static void *DetourGetGenericInterface(vr::IVRDriverContext *_this, const char *
 	{
 		if (!IHook::Exists(TrackedDevicePoseUpdatedHook005.name))
 		{
-			TrackedDevicePoseUpdatedHook005.CreateHookInObjectVTable(originalInterface, 1, &DetourTrackedDevicePoseUpdated005);
+			TrackedDevicePoseUpdatedHook005.CreateHookInObjectVTable(originalInterface, 1, (void *)&DetourTrackedDevicePoseUpdated005);
 			IHook::Register(&TrackedDevicePoseUpdatedHook005);
 		}
 	}
@@ -52,7 +52,7 @@ static void *DetourGetGenericInterface(vr::IVRDriverContext *_this, const char *
 	{
 		if (!IHook::Exists(TrackedDevicePoseUpdatedHook006.name))
 		{
-			TrackedDevicePoseUpdatedHook006.CreateHookInObjectVTable(originalInterface, 1, &DetourTrackedDevicePoseUpdated006);
+			TrackedDevicePoseUpdatedHook006.CreateHookInObjectVTable(originalInterface, 1, (void *)&DetourTrackedDevicePoseUpdated006);
 			IHook::Register(&TrackedDevicePoseUpdatedHook006);
 		}
 	}
@@ -63,21 +63,16 @@ static void *DetourGetGenericInterface(vr::IVRDriverContext *_this, const char *
 void InjectHooks(ServerTrackedDeviceProvider *driver, vr::IVRDriverContext *pDriverContext)
 {
 	Driver = driver;
-
-	auto err = MH_Initialize();
-	if (err == MH_OK)
-	{
-		GetGenericInterfaceHook.CreateHookInObjectVTable(pDriverContext, 0, &DetourGetGenericInterface);
-		IHook::Register(&GetGenericInterfaceHook);
-	}
-	else
-	{
-		LOG("MH_Initialize error: %s", MH_StatusToString(err));
-	}
+	GetGenericInterfaceHook.CreateHookInObjectVTable(pDriverContext, 0, (void *)&DetourGetGenericInterface);
+	IHook::Register(&GetGenericInterfaceHook);
 }
 
 void DisableHooks()
 {
 	IHook::DestroyAll();
-	MH_Uninitialize();
+	if (IHook::funchook)
+	{
+		funchook_destroy(IHook::funchook);
+		IHook::funchook = nullptr;
+	}
 }

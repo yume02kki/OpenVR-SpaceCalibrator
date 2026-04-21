@@ -1,5 +1,6 @@
 #include "Hooking.h"
 
+funchook_t *IHook::funchook = nullptr;
 std::map<std::string, IHook *> IHook::hooks;
 
 bool IHook::Exists(const std::string &name)
