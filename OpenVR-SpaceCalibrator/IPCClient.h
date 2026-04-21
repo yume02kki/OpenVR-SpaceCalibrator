@@ -2,17 +2,17 @@
 
 #include "../Protocol.h"
 
-class IPCClient
-{
+class IPCClient {
 public:
-	~IPCClient();
+    ~IPCClient();
 
-	void Connect();
-	protocol::Response SendBlocking(const protocol::Request &request);
+    void Connect();
 
-	void Send(const protocol::Request &request);
-	protocol::Response Receive();
+    protocol::Response SendBlocking(const protocol::Request &request);
+
+    void Send(const protocol::Request &request);
+    protocol::Response Receive();
 
 private:
-	HANDLE pipe = INVALID_HANDLE_VALUE;
+    int client_fd = -1;
 };

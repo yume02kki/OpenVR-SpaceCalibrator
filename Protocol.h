@@ -6,7 +6,7 @@
 #include <openvr_driver.h>
 #endif
 
-#define OPENVR_SPACECALIBRATOR_PIPE_NAME "\\\\.\\pipe\\OpenVRSpaceCalibratorDriver"
+#define OPENVR_SPACECALIBRATOR_PIPE_NAME "/tmp/OpenVRSpaceCalibratorDriver.sock"
 
 namespace protocol
 {
