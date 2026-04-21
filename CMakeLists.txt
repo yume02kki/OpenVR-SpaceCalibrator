@@ -34,7 +34,7 @@ target_compile_options(openvr-spacecalibrator PRIVATE -Wno-template-body)
 target_link_libraries(openvr-spacecalibrator glfw OpenGL::GL openvr_api Threads::Threads dl)
 
 # Driver shared library
-add_library(driver_spacecalibrator SHARED
+add_library(driver_01spacecalibrator SHARED
     OpenVR-SpaceCalibratorDriver/dllmain.cpp
     OpenVR-SpaceCalibratorDriver/Hooking.cpp
     OpenVR-SpaceCalibratorDriver/InterfaceHookInjector.cpp
@@ -43,6 +43,7 @@ add_library(driver_spacecalibrator SHARED
     OpenVR-SpaceCalibratorDriver/OpenVR-SpaceCalibratorDriver.cpp
     OpenVR-SpaceCalibratorDriver/ServerTrackedDeviceProvider.cpp
 )
-target_include_directories(driver_spacecalibrator PRIVATE OpenVR-SpaceCalibratorDriver)
-target_link_libraries(driver_spacecalibrator openvr_api funchook Threads::Threads)
-target_compile_options(driver_spacecalibrator PRIVATE -fvisibility=hidden)
+target_include_directories(driver_01spacecalibrator PRIVATE OpenVR-SpaceCalibratorDriver)
+target_link_libraries(driver_01spacecalibrator openvr_api funchook Threads::Threads)
+target_compile_options(driver_01spacecalibrator PRIVATE -fvisibility=hidden)
+set_target_properties(driver_01spacecalibrator PROPERTIES BUILD_RPATH_USE_ORIGIN ON INSTALL_RPATH "$ORIGIN")

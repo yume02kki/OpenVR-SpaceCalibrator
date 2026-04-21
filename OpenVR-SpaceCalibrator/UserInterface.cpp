@@ -253,6 +253,7 @@ void BuildSystemSelection(const VRState &state)
 	}
 
 	ImGui::PushItemWidth(paneWidth);
+	if (!referenceSystems.empty())
 	ImGui::Combo("##ReferenceTrackingSystem", &currentReferenceSystem, &referenceSystems[0], (int) referenceSystems.size());
 
 	if (currentReferenceSystem != -1 && currentReferenceSystem < (int) referenceSystems.size())
@@ -277,6 +278,7 @@ void BuildSystemSelection(const VRState &state)
 	}
 
 	ImGui::SameLine();
+	if (!targetSystems.empty())
 	ImGui::Combo("##TargetTrackingSystem", &currentTargetSystem, &targetSystems[0], (int) targetSystems.size());
 
 	if (currentTargetSystem != -1 && currentTargetSystem < targetSystems.size())
