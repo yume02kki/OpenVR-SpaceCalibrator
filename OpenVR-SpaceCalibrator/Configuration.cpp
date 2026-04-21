@@ -1,13 +1,14 @@
-#include "stdafx.h"
 #include "Configuration.h"
 
 #include <picojson.h>
 
+#include <cstdlib>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <limits>
+#include <iterator>
 
 static picojson::array FloatArray(const float *buf, int numFloats)
 {
@@ -142,63 +143,27 @@ static void WriteProfile(CalibrationContext &ctx, std::ostream &out)
 	out << profilesV.serialize(true);
 }
 
-static void LogRegistryResult(LSTATUS result)
+static std::string ConfigPath()
 {
-	char *message;
-	FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, 0, result, LANG_USER_DEFAULT, (LPSTR)&message, 0, NULL);
-	std::cerr << "Opening registry key: " << message << std::endl;
+	return std::string(getenv("HOME")) + "/.config/openvr-spacecalibrator.json";
 }
 
-static const char *RegistryKey = "Software\\OpenVR-SpaceCalibrator";
-
-static std::string ReadRegistryKey()
+static std::string ReadConfig()
 {
-	DWORD size = 0;
-	auto result = RegGetValueA(HKEY_CURRENT_USER_LOCAL_SETTINGS, RegistryKey, "Config", RRF_RT_REG_SZ, 0, 0, &size);
-	if (result != ERROR_SUCCESS)
-	{
-		LogRegistryResult(result);
-		return "";
-	}
-
-	std::string str;
-	str.resize(size);
-
-	result = RegGetValueA(HKEY_CURRENT_USER_LOCAL_SETTINGS, RegistryKey, "Config", RRF_RT_REG_SZ, 0, &str[0], &size);
-	if (result != ERROR_SUCCESS)
-	{
-		LogRegistryResult(result);
-		return "";
-	}
-	
-	str.resize(size - 1);
-	return str;
+	std::ifstream f(ConfigPath());
+	return f.good() ? std::string(std::istreambuf_iterator<char>(f), {}) : "";
 }
 
-static void WriteRegistryKey(std::string str)
+static void WriteConfig(std::string str)
 {
-	HKEY hkey;
-	auto result = RegCreateKeyExA(HKEY_CURRENT_USER_LOCAL_SETTINGS, RegistryKey, 0, REG_NONE, 0, KEY_ALL_ACCESS, 0, &hkey, 0);
-	if (result != ERROR_SUCCESS)
-	{
-		LogRegistryResult(result);
-		return;
-	}
-
-	DWORD size = str.size() + 1;
-
-	result = RegSetValueExA(hkey, "Config", 0, REG_SZ, reinterpret_cast<const BYTE*>(str.c_str()), size);
-	if (result != ERROR_SUCCESS)
-		LogRegistryResult(result);
-
-	RegCloseKey(hkey);
+	std::ofstream(ConfigPath()) << str;
 }
 
 void LoadProfile(CalibrationContext &ctx)
 {
 	ctx.validProfile = false;
 
-	auto str = ReadRegistryKey();
+	auto str = ReadConfig();
 	if (str == "")
 	{
 		std::cout << "Profile is empty" << std::endl;
@@ -220,9 +185,9 @@ void LoadProfile(CalibrationContext &ctx)
 
 void SaveProfile(CalibrationContext &ctx)
 {
-	std::cout << "Saving profile to registry" << std::endl;
+	std::cout << "Saving profile" << std::endl;
 
 	std::stringstream io;
 	WriteProfile(ctx, io);
-	WriteRegistryKey(io.str());
+	WriteConfig(io.str());
 }
